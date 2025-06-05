@@ -1,40 +1,86 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
 
-# Page Configuration
-st.set_page_config(page_title="Jarvis – Real Estate Investment Agent", layout="centered")
+# Simulated contact form handler (placeholder for real email integration)
+def process_contact_form(name, email, message):
+    st.success(f"Thank you, {name}. Your message has been sent!")
 
-# Header
-st.title("🤖 Meet Jarvis")
-st.subheader("Your Smart Real Estate Investment Agent")
+# ROI calculator function
+# Calculates annual return on investment based on purchase price, monthly income, and expenses
+def calculate_roi(purchase_price, rental_income, expenses):
+    annual_income = rental_income * 12
+    annual_expenses = expenses * 12
+    roi = ((annual_income - annual_expenses) / purchase_price) * 100
+    return roi
 
-# Introduction Section
-st.markdown("""
-Jarvis is an intelligent digital agent designed to **search**, **analyze**, and **manage real estate investments** on your behalf.
+# Main app logic
+# Handles UI layout and tabbed interface
+def main():
+    st.set_page_config(page_title="Jarvis2 Real Estate Agent", layout="wide")
 
-Whether you're a seasoned investor or just getting started, Jarvis helps you make smarter decisions and grow your portfolio — all while saving you time and effort.
-""")
+    # Main UI
+    st.title("🤖 Welcome to Jarvis2")
+    st.subheader("Explore properties, calculate returns, and connect with us.")
 
-# Features
-st.header("🛠️ What Jarvis Can Do")
+    # Define three tabs for different features
+    tab1, tab2, tab3 = st.tabs(["🏠 Property Search", "📊 ROI Calculator", "📩 Contact Jarvis2"])
 
-features = {
-    "🏡 Property Search": "Finds the best investment opportunities based on your goals and filters.",
-    "📈 Investment Analysis": "Evaluates properties for ROI, cap rate, cash flow, and risk profile.",
-    "💼 Fund Management": "Manages investor capital with transparency and performance tracking.",
-    "🧾 Reporting": "Generates regular updates on property performance and portfolio health.",
-    "💰 Fees": "Works for a small percentage of the profits – no hidden costs."
-}
+    # ----- Tab 1: Property Search -----
+    with tab1:
+        st.header("Property Search")
+        try:
+            # Load property data from a CSV file
+            df = pd.read_csv("properties.csv")
+            st.dataframe(df)  # Display full data before filtering
 
-for title, description in features.items():
-    st.markdown(f"**{title}** – {description}")
+            # Filter by city
+            city_filter = st.selectbox("Select City", options=["All"] + df["City"].unique().tolist())
+            if city_filter != "All":
+                df = df[df["City"] == city_filter]
 
-# Call to Action
-st.header("🚀 Ready to Grow Your Real Estate Portfolio?")
-st.markdown("Let Jarvis help you make smarter, data-driven investment decisions.")
+            # Filter by price range using a slider
+            price_range = st.slider(
+                "Price Range",
+                min_value=int(df["Price"].min()),
+                max_value=int(df["Price"].max()),
+                value=(int(df["Price"].min()), int(df["Price"].max()))
+            )
+            df_filtered = df[(df["Price"] >= price_range[0]) & (df["Price"] <= price_range[1])]
+            st.dataframe(df_filtered)  # Display filtered data
 
-if st.button("📩 Contact Jarvis"):
-    st.success("An agent will reach out to you shortly!")
+        except FileNotFoundError:
+            # Inform user if CSV file is missing
+            st.warning("Property CSV file not found. Please upload 'properties.csv' to view property listings.")
 
-# Footer
-st.markdown("---")
-st.caption("© 2025 Jarvis Investment Agent – Built to maximize your real estate potential.")
+    # ----- Tab 2: ROI Calculator -----
+    with tab2:
+        st.header("Investment ROI Calculator")
+
+        # Input fields for investment values
+        price = st.number_input("Purchase Price ($)", min_value=10000.0, step=1000.0)
+        income = st.number_input("Monthly Rental Income ($)", min_value=0.0, step=100.0)
+        expenses = st.number_input("Monthly Expenses ($)", min_value=0.0, step=100.0)
+
+        # Calculate ROI on button click
+        if st.button("Calculate ROI"):
+            roi = calculate_roi(price, income, expenses)
+            st.success(f"Estimated ROI: {roi:.2f}%")
+
+    # ----- Tab 3: Contact Form -----
+    with tab3:
+        st.header("Contact Jarvis2")
+        with st.form("contact_form"):
+            # Form fields for contacting
+            name = st.text_input("Your Name")
+            email = st.text_input("Your Email")
+            message = st.text_area("Your Message")
+            submitted = st.form_submit_button("Send Message")
+
+            # Simulate sending form
+            if submitted:
+                process_contact_form(name, email, message)
+
+# Run the app
+if __name__ == "__main__":
+    main()
